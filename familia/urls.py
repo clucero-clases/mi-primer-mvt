@@ -7,4 +7,6 @@ urlpatterns = [
     path('agregar/', views.agregar, name="agregar"),
     path('borrar/<identificador>', views.borrar, name="borrar"),
     path('buscar/', views.buscar, name="buscar"),
+    path('agregar/<identificador>/domicilio/', views.domicilio, name="domicilio"),
+    path('agregar/<identificador>/laboral/', views.laboral, name="laboral")
 ]

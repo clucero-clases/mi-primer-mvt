@@ -12,3 +12,14 @@ class PersonaForm(forms.Form):
 
 class BuscarPersonasForm(forms.Form):
     palabra_a_buscar = forms.CharField(label="Buscar")
+
+class DomicilioForm(forms.Form):
+    calle = forms.CharField(label="Calle", max_length=50)
+    numero = forms.IntegerField(label="Número")
+    ciudad = forms.CharField(label="Ciudad", max_length=50)
+    provincia = forms.CharField(label="Provincia", max_length=50)
+
+class LaboralForm(forms.Form):
+    actividad = forms.CharField(label="Actividad", max_length=30)
+    antiguedad = forms.IntegerField(label="Antigüedad")
+    

@@ -1,9 +1,9 @@
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.template import loader
 from django.shortcuts import render
-from familia.forms import PersonaForm, BuscarPersonasForm
+from familia.forms import PersonaForm, BuscarPersonasForm, DomicilioForm, LaboralForm
 
-from familia.models import Persona
+from familia.models import Persona, Domicilio, Laboral
 
 def index(request):
     personas = Persona.objects.all()
@@ -40,6 +40,10 @@ def agregar(request):
     
     return render(request, 'familia/form_carga.html', {'form': form})
 
+def borrarRelacion(tabla, identificador):
+    items = tabla.objects.filter(idPersona=int(identificador))
+    if(items.count()>0):
+        items.delete()
 
 def borrar(request, identificador):
     '''
@@ -50,7 +54,10 @@ def borrar(request, identificador):
         persona = Persona.objects.filter(id=int(identificador)).first()
         if persona:
             persona.delete()
-        return HttpResponseRedirect("/familia/")
+        borrarRelacion(Laboral, identificador)
+        borrarRelacion(Domicilio, identificador)
+        
+        return HttpResponseRedirect("/")
     else:
         return HttpResponseBadRequest("Error no conzco ese metodo para esta request")
 
@@ -73,5 +80,48 @@ def buscar(request):
             palabra_a_buscar = form_busqueda.cleaned_data['palabra_a_buscar']
             personas = Persona.objects.filter(nombre__icontains=palabra_a_buscar)
 
-        return  render(request, 'familia/lista_familiares.html', {"personas": personas})
+        return render(request, 'familia/lista_familiares.html', {"personas": personas})
+
+def domicilio(request, identificador):
+    if request.method == "POST":
+        form = DomicilioForm(request.POST)
+        if form.is_valid():
+            calle = form.cleaned_data['calle']
+            numero = form.cleaned_data['numero']
+            ciudad = form.cleaned_data['ciudad']
+            provincia = form.cleaned_data['provincia']
+            
+            borrarRelacion(Domicilio, identificador)
+            Domicilio(idPersona=identificador, calle=calle, numero=numero, ciudad=ciudad, provincia=provincia).save()
+            return HttpResponseRedirect("/")
+
+    elif request.method == "GET":
+        domicilio = Domicilio.objects.filter(idPersona=identificador).last()
+        if(domicilio):
+            form = DomicilioForm(initial={'calle':domicilio.calle, 'numero':domicilio.numero, 'ciudad':domicilio.ciudad, 'provincia':domicilio.provincia})
+        else:
+            form = DomicilioForm()
+
+        return render(request, 'familia/form_domicilio.html', {'form': form, 'idPersona':identificador})
+
+
+def laboral(request, identificador):
+    if request.method == "POST":
+        form = LaboralForm(request.POST)
+        if form.is_valid():
+            actividad = form.cleaned_data['actividad']
+            antiguedad = form.cleaned_data['antiguedad']
+            borrarRelacion(Laboral, identificador)
+            Laboral(idPersona=identificador, actividad=actividad, antiguedad=antiguedad).save()
+            return HttpResponseRedirect("/")
+
+    elif request.method == "GET":
+        laboral = Laboral.objects.filter(idPersona__icontains=identificador).last()
+        if(laboral):
+            form = LaboralForm(initial={'actividad':laboral.actividad, 'antiguedad':laboral.antiguedad})
+        else:
+            form = LaboralForm()
+
+        return render(request, 'familia/form_laboral.html', {'form': form, 'idPersona':identificador })
+
     
